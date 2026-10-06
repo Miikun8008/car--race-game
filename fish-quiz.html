@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐟 魚タイプ診断</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #0077b6 0%, #00b4d8 50%, #90e0ef 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 24px;
+      padding: 40px 36px;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .title {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #0077b6, #00b4d8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      font-size: 0.95rem;
+      margin-bottom: 32px;
+    }
+
+    .progress-wrap {
+      background: #eee;
+      border-radius: 99px;
+      height: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #0077b6, #00b4d8);
+      border-radius: 99px;
+      transition: width 0.4s ease;
+    }
+
+    .progress-label {
+      text-align: right;
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 24px;
+    }
+
+    .question-block {
+      animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .question-num {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #0077b6;
+      margin-bottom: 8px;
+    }
+
+    .question-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-btn {
+      padding: 14px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 14px;
+      background: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s ease;
+      color: #444;
+      font-weight: 500;
+    }
+
+    .option-btn:hover {
+      border-color: #0077b6;
+      background: #e0f4ff;
+      color: #0077b6;
+      transform: translateX(4px);
+    }
+
+    .opt-emoji {
+      margin-right: 10px;
+      font-size: 1.2rem;
+    }
+
+    .result-block {
+      text-align: center;
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.7); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .result-emoji {
+      font-size: 6rem;
+      display: block;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+    }
+
+    .result-type {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #aaa;
+      margin-bottom: 6px;
+    }
+
+    .result-name {
+      font-size: 2.2rem;
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+
+    .result-desc {
+      font-size: 1rem;
+      color: #555;
+      line-height: 1.7;
+      background: #e8f8ff;
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .result-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .tag {
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .retry-btn {
+      display: inline-block;
+      padding: 14px 36px;
+      border: none;
+      border-radius: 99px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(90deg, #0077b6, #00b4d8);
+      color: #fff;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 20px rgba(0, 119, 182, 0.4);
+    }
+
+    .retry-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(0, 119, 182, 0.5);
+    }
+
+    .retry-btn:active {
+      transform: translateY(0);
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="title">🐟 魚タイプ診断</div>
+  <p class="subtitle">3つの質問に答えて、あなたの魚タイプを探そう！</p>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">0 / 3</div>
+
+  <div id="questionArea">
+    <div class="question-block" id="questionBlock">
+      <div class="question-num" id="questionNum">質問 1</div>
+      <div class="question-text" id="questionText"></div>
+      <div class="options" id="optionsArea"></div>
+    </div>
+  </div>
+
+  <div id="resultArea" class="hidden">
+    <div class="result-block">
+      <span class="result-emoji" id="resultEmoji"></span>
+      <div class="result-type">あなたの魚タイプは…</div>
+      <div class="result-name" id="resultName"></div>
+      <div class="result-desc" id="resultDesc"></div>
+      <div class="result-tags" id="resultTags"></div>
+      <button class="retry-btn" onclick="restart()">🔄 もう一度診断する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const questions = [
+    {
+      text: "週末の理想的な過ごし方は？",
+      options: [
+        { label: "友達とにぎやかに外出する",         value: "social",   emoji: "🎉" },
+        { label: "一人で静かに家でのんびりする",       value: "solo",     emoji: "🏠" },
+        { label: "自然の中で思いっきり体を動かす",     value: "active",   emoji: "🌊" },
+        { label: "何か新しいことを学んだり探求する",   value: "curious",  emoji: "🔍" },
+      ]
+    },
+    {
+      text: "あなたの強みに近いのはどれ？",
+      options: [
+        { label: "リーダーシップがある",              value: "leader",   emoji: "👑" },
+        { label: "周りに優しく気遣いができる",         value: "kind",     emoji: "💛" },
+        { label: "素早く行動できる",                  value: "fast",     emoji: "⚡" },
+        { label: "粘り強くコツコツ続けられる",         value: "steady",   emoji: "🔥" },
+      ]
+    },
+    {
+      text: "困ったとき、どう乗り越える？",
+      options: [
+        { label: "仲間に相談して一緒に解決する",       value: "team",     emoji: "🤝" },
+        { label: "自分の直感を信じてすぐ動く",         value: "instinct", emoji: "💡" },
+        { label: "じっくり考えて計画を立てる",         value: "plan",     emoji: "📝" },
+        { label: "いったん距離を置いて冷静になる",     value: "calm",     emoji: "🌊" },
+      ]
+    }
+  ];
+
+  const fishes = [
+    {
+      name: "マグロ 🐟", emoji: "🐟", color: "#1565c0",
+      desc: "あなたはマグロタイプ！常に全力で泳ぎ続ける、エネルギッシュな行動派。止まると死ぬと言われるほど、動き続けることで本領を発揮します。スピードと突破力で周りを引っ張るリーダー的存在です。",
+      tags: ["🚀 行動力抜群", "💪 エネルギッシュ", "👑 リーダー気質", "🔥 情熱的"],
+      tagColors: ["#e3f2fd","#fce4ec","#fff8e1","#fff3e0"],
+      tagText:   ["#0d47a1","#c62828","#f57f17","#e65100"],
+      scores: { social:2,solo:1,active:3,curious:1, leader:3,kind:0,fast:3,steady:1, team:1,instinct:3,plan:0,calm:0 }
+    },
+    {
+      name: "クマノミ 🐠", emoji: "🐠", color: "#e65100",
+      desc: "あなたはクマノミタイプ！明るくカラフルで、仲間思いの愛されキャラ。自分の居場所をしっかり守りながら、周りとの絆を大切にします。人を癒す温かさと、いざというときの勇敢さを持ち合わせています。",
+      tags: ["🧡 仲間思い", "🎨 個性豊か", "🏠 縄張り意識", "😊 癒し系"],
+      tagColors: ["#fff3e0","#fce4ec","#e8f5e9","#e3f2fd"],
+      tagText:   ["#bf360c","#880e4f","#2e7d32","#01579b"],
+      scores: { social:3,solo:1,active:1,curious:2, leader:1,kind:3,fast:1,steady:2, team:3,instinct:2,plan:1,calm:1 }
+    },
+    {
+      name: "タコ 🐙", emoji: "🐙", color: "#6a1b9a",
+      desc: "あなたはタコタイプ！驚くほどの知性と柔軟な発想力の持ち主。どんな形にも変化できる適応力と、8本の腕のようにマルチタスクをこなす器用さが魅力です。じっくり観察してから動く戦略家タイプです。",
+      tags: ["🧠 高知性", "🎭 柔軟", "🔍 観察眼", "🎯 戦略家"],
+      tagColors: ["#f3e5f5","#e8f5e9","#e3f2fd","#fff8e1"],
+      tagText:   ["#4a148c","#1b5e20","#0d47a1","#f57f17"],
+      scores: { social:1,solo:3,active:1,curious:3, leader:2,kind:1,fast:1,steady:3, team:1,instinct:1,plan:3,calm:2 }
+    },
+    {
+      name: "イルカ 🐬", emoji: "🐬", color: "#0288d1",
+      desc: "あなたはイルカタイプ！頭が良く、社交的で遊び心にあふれています。コミュニケーション能力が高く、どんな相手とも打ち解けられる天性の社交家。チームを明るく盛り上げるムードメーカーです。",
+      tags: ["😄 社交的", "🧠 聡明", "🎉 ムードメーカー", "💬 話し上手"],
+      tagColors: ["#e3f2fd","#e0f7fa","#f3e5f5","#e8f5e9"],
+      tagText:   ["#0277bd","#00838f","#6a1b9a","#2e7d32"],
+      scores: { social:3,solo:0,active:2,curious:2, leader:2,kind:3,fast:2,steady:0, team:3,instinct:2,plan:1,calm:0 }
+    },
+    {
+      name: "ウミガメ 🐢", emoji: "🐢", color: "#2e7d32",
+      desc: "あなたはウミガメタイプ！何百年もかけて海を旅する、ゆったりとした安定感が魅力。焦らず、着実に目標に向かって進み続けます。長い目で物事を考え、周りに安心感を与える頼もしい存在です。",
+      tags: ["🛡️ 安定感", "🌏 大局観", "💪 忍耐強い", "🏔️ 芯が強い"],
+      tagColors: ["#e8f5e9","#e3f2fd","#fff3e0","#efebe9"],
+      tagText:   ["#1b5e20","#01579b","#e65100","#4e342e"],
+      scores: { social:1,solo:2,active:2,curious:1, leader:1,kind:2,fast:0,steady:3, team:2,instinct:1,plan:3,calm:3 }
+    },
+    {
+      name: "フグ 🐡", emoji: "🐡", color: "#00838f",
+      desc: "あなたはフグタイプ！普段は穏やかでかわいらしい印象ですが、いざとなれば驚きの力を発揮するギャップの持ち主。自分だけの個性とこだわりを持ち、独特のペースで周りを惹きつけます。",
+      tags: ["✨ ギャップ萌え", "🌟 個性的", "🤫 マイペース", "💥 秘めた力"],
+      tagColors: ["#e0f7fa","#f3e5f5","#fff8e1","#fce4ec"],
+      tagText:   ["#006064","#6a1b9a","#f57f17","#880e4f"],
+      scores: { social:1,solo:3,active:1,curious:3, leader:1,kind:2,fast:1,steady:2, team:1,instinct:2,plan:2,calm:3 }
+    },
+  ];
+
+  let currentQ = 0;
+  let answers = [];
+
+  function renderQuestion() {
+    const q = questions[currentQ];
+    document.getElementById("questionNum").textContent = `質問 ${currentQ + 1}`;
+    document.getElementById("questionText").textContent = q.text;
+
+    const area = document.getElementById("optionsArea");
+    area.innerHTML = "";
+    q.options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.innerHTML = `<span class="opt-emoji">${opt.emoji}</span>${opt.label}`;
+      btn.addEventListener("click", () => selectAnswer(opt.value));
+      area.appendChild(btn);
+    });
+
+    updateProgress(currentQ);
+
+    const block = document.getElementById("questionBlock");
+    block.style.animation = "none";
+    requestAnimationFrame(() => { block.style.animation = "slideIn 0.4s ease"; });
+  }
+
+  function updateProgress(step) {
+    document.getElementById("progressBar").style.width = (step / questions.length * 100) + "%";
+    document.getElementById("progressLabel").textContent = `${step} / ${questions.length}`;
+  }
+
+  function selectAnswer(value) {
+    answers.push(value);
+    currentQ++;
+    if (currentQ < questions.length) {
+      renderQuestion();
+    } else {
+      updateProgress(questions.length);
+      showResult();
+    }
+  }
+
+  function computeFish() {
+    return fishes
+      .map(f => ({ f, score: answers.reduce((s, v) => s + (f.scores[v] || 0), 0) }))
+      .sort((x, y) => y.score - x.score)[0].f;
+  }
+
+  function showResult() {
+    const r = computeFish();
+    document.getElementById("questionArea").classList.add("hidden");
+    document.getElementById("resultArea").classList.remove("hidden");
+
+    document.getElementById("resultEmoji").textContent = r.emoji;
+    document.getElementById("resultName").textContent = r.name;
+    document.getElementById("resultName").style.color = r.color;
+    document.getElementById("resultDesc").textContent = r.desc;
+
+    const tagsEl = document.getElementById("resultTags");
+    tagsEl.innerHTML = "";
+    r.tags.forEach((tag, i) => {
+      const span = document.createElement("span");
+      span.className = "tag";
+      span.textContent = tag;
+      span.style.background = r.tagColors[i];
+      span.style.color = r.tagText[i];
+      tagsEl.appendChild(span);
+    });
+  }
+
+  function restart() {
+    currentQ = 0;
+    answers = [];
+    document.getElementById("resultArea").classList.add("hidden");
+    document.getElementById("questionArea").classList.remove("hidden");
+    updateProgress(0);
+    renderQuestion();
+  }
+
+  renderQuestion();
+</script>
+</body>
+</html>

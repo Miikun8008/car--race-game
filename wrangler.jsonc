@@ -1,0 +1,11 @@
+{
+  // Cloudflare Workers の設定ファイル
+  "name": "car--race-game",
+  "compatibility_date": "2024-09-25",
+
+  // 静的ファイルをそのまま配信する設定
+  "assets": {
+    "directory": "./",
+    "not_found_handling": "single-page-application"
+  }
+}
